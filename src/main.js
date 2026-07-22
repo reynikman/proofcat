@@ -59,6 +59,7 @@ const I18N = {
     updatesLabel: "Updates", checkUpdates: "Check for updates", updChecking: "Checking…",
     updUpToDate: "You have the latest version", updAvailable: "Update available:",
     updInstall: "Download & install", updInstalling: "Downloading & installing…", updError: "Check failed",
+    updPrompt: "ProofCat {version} is ready. Download and install it now?",
     // crash reporting (opt-in, default OFF)
     crashLabel: "Error reports",
     crashHint: "Off by default. When on, crash reports go only to your own server — no file names or paths. Applies after restart.",
@@ -194,6 +195,7 @@ const I18N = {
     updatesLabel: "Обновления", checkUpdates: "Проверить обновления", updChecking: "Проверяю…",
     updUpToDate: "Установлена последняя версия", updAvailable: "Доступно обновление:",
     updInstall: "Скачать и установить", updInstalling: "Скачиваю и ставлю…", updError: "Проверка не удалась",
+    updPrompt: "Готово обновление ProofCat {version}. Скачать и установить сейчас?",
     // crash reporting (opt-in, по умолчанию OFF)
     crashLabel: "Отчёты об ошибках",
     crashHint: "По умолчанию выкл. Если включить — отчёты о сбоях уходят только на ваш сервер, без имён и путей файлов. Применится после перезапуска.",
@@ -329,6 +331,7 @@ const I18N = {
     updatesLabel: "更新", checkUpdates: "检查更新", updChecking: "检查中…",
     updUpToDate: "已是最新版本", updAvailable: "有可用更新：",
     updInstall: "下载并安装", updInstalling: "正在下载并安装…", updError: "检查失败",
+    updPrompt: "ProofCat {version} 已可更新。现在下载并安装吗？",
     // crash reporting (opt-in, default OFF)
     crashLabel: "错误报告",
     crashHint: "默认关闭。开启后，崩溃报告只会发送到你自己的服务器 — 不含文件名或路径。重启后生效。",
@@ -464,6 +467,7 @@ const I18N = {
     updatesLabel: "アップデート", checkUpdates: "アップデートを確認", updChecking: "確認中…",
     updUpToDate: "最新バージョンです", updAvailable: "利用可能なアップデート：",
     updInstall: "ダウンロードしてインストール", updInstalling: "ダウンロード・インストール中…", updError: "確認に失敗しました",
+    updPrompt: "ProofCat {version} を利用できます。今すぐダウンロードしてインストールしますか？",
     // crash reporting (opt-in, default OFF)
     crashLabel: "エラーレポート",
     crashHint: "初期設定はオフです。オンにすると、クラッシュレポートはご自身のサーバーにのみ送信されます — ファイル名やパスは含みません。再起動後に有効になります。",
@@ -2459,6 +2463,7 @@ document.getElementById("logs-btn").addEventListener("click", async () => {
 
 // ======================= auto-update =======================
 let updateAvail = null;
+let promptedUpdateVersion = null;
 function setUpdateBtn() {
   const label = document.querySelector("#update-btn .btn-label");
   label.textContent = updateAvail ? `${t("updInstall")} v${updateAvail.version}` : t("checkUpdates");
@@ -2472,6 +2477,14 @@ async function checkUpdate(manual) {
       updateAvail = info;
       st.textContent = `${t("updAvailable")} v${info.version}`;
       document.querySelectorAll(".settings-trigger").forEach((button) => button.classList.add("has-update"));
+      if (!manual && promptedUpdateVersion !== info.version) {
+        promptedUpdateVersion = info.version;
+        window.setTimeout(() => {
+          if (updateAvail?.version === info.version && window.confirm(t("updPrompt").replace("{version}", `v${info.version}`))) {
+            installUpdate();
+          }
+        }, 0);
+      }
     } else {
       updateAvail = null;
       if (manual) st.textContent = t("updUpToDate");

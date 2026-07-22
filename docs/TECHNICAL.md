@@ -47,7 +47,9 @@ or long-term archive health after verification. It never formats source media.
 
 The GitHub release includes macOS and Windows installers, the
 `SHA256SUMS-macos.txt` and `SHA256SUMS-windows.txt` manifests, and Tauri updater
-signatures. Verify the checksum before overriding an operating-system warning.
+signatures. Its `latest.json` feed contains the matching signatures and tells
+installed applications which macOS and Windows package to download. Verify the
+checksum before overriding an operating-system warning.
 
 Tauri updater signing is not Apple Developer ID signing/notarization or Windows
 Authenticode. Therefore Gatekeeper or SmartScreen may warn on first launch.

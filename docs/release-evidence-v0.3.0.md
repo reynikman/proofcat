@@ -12,14 +12,15 @@ The GitHub Release includes:
 - a macOS Apple Silicon DMG and updater archive;
 - Windows x64 MSI and NSIS installers;
 - Tauri updater signatures for the updater-capable artifacts; and
-- `SHA256SUMS-macos.txt` and `SHA256SUMS-windows.txt` manifests.
+- `SHA256SUMS-macos.txt`, `SHA256SUMS-windows.txt` and the `latest.json` update feed.
 
 Verify a release checksum before overriding an operating-system first-launch
 warning. Tauri updater signing is not Apple notarization or Windows
 Authenticode.
 
-The release contains nine assets. GitHub's SHA-256 digests were checked against
-the local artifacts after upload.
+The release contains ten assets. GitHub's SHA-256 digests were checked against
+the local artifacts after upload. The feed contains the corresponding macOS and
+Windows Tauri signatures.
 
 ## Real-media qualification
 

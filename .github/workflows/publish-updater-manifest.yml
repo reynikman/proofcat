@@ -1,0 +1,59 @@
+name: Publish updater manifest
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  publish-manifest:
+    if: ${{ !github.event.release.prerelease && !github.event.release.draft }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Download the updater signatures from the published release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          mkdir -p updater-assets
+          gh release download "$TAG" --repo "$REPOSITORY" --dir updater-assets \
+            --pattern '*.app.tar.gz.sig' --pattern '*_x64-setup.exe.sig'
+          test -n "$(find updater-assets -maxdepth 1 -name '*.app.tar.gz.sig' -print -quit)"
+          test -n "$(find updater-assets -maxdepth 1 -name '*_x64-setup.exe.sig' -print -quit)"
+      - name: Generate a signed update feed
+        env:
+          REPOSITORY: ${{ github.repository }}
+          TAG: ${{ github.event.release.tag_name }}
+          PUBLISHED_AT: ${{ github.event.release.published_at }}
+        run: |
+          version=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          macos_signature=$(find updater-assets -maxdepth 1 -name '*.app.tar.gz.sig' -print -quit)
+          windows_signature=$(find updater-assets -maxdepth 1 -name '*_x64-setup.exe.sig' -print -quit)
+          node scripts/generate-updater-manifest.mjs \
+            --repository "$REPOSITORY" \
+            --version "$version" \
+            --tag "$TAG" \
+            --pub-date "$PUBLISHED_AT" \
+            --macos-signature "$macos_signature" \
+            --windows-signature "$windows_signature" \
+            --output updater-assets/latest.json
+      - name: Upload and verify latest.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          gh release upload "$TAG" updater-assets/latest.json --repo "$REPOSITORY" --clobber
+          curl --fail --location --retry 5 --retry-all-errors \
+            "https://github.com/$REPOSITORY/releases/latest/download/latest.json" \
+            --output /tmp/latest.json
+          node -e "const feed = require('/tmp/latest.json'); if (!feed.platforms?.['darwin-aarch64'] || !feed.platforms?.['windows-x86_64']) process.exit(1)"

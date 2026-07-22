@@ -9,7 +9,8 @@ A release must have:
 1. a clean, committed source snapshot;
 2. passing Rust tests, clippy, frontend checks and lint;
 3. checksum-verified native media tools;
-4. platform installer artifacts, Tauri updater signatures and SHA-256 manifests;
+4. platform installer artifacts, Tauri updater signatures, SHA-256 manifests
+   and a generated `latest.json` update feed;
 5. a release record that links the artifact and hardware-test evidence.
 
 The hardware qualification and artifact provenance are related but separate:
@@ -21,10 +22,11 @@ that one automatically proves the other.
 
 ProofCat 0.3.0 is published at
 [`reynikman/proofcat`](https://github.com/reynikman/proofcat/releases/tag/v0.3.0).
-The release contains nine assets: macOS Apple Silicon DMG and updater archive,
-Windows x64 MSI and NSIS installers, their updater signatures, and separate
-`SHA256SUMS-macos.txt` and `SHA256SUMS-windows.txt` manifests. GitHub's
-SHA-256 digests were checked against the local release artifacts after upload.
+The release contains ten assets: macOS Apple Silicon DMG and updater archive,
+Windows x64 MSI and NSIS installers, their updater signatures, separate
+`SHA256SUMS-macos.txt` and `SHA256SUMS-windows.txt` manifests, and `latest.json`.
+GitHub's SHA-256 digests were checked against the local release artifacts after
+upload. The feed binds the updater packages to their signatures.
 
 Tauri updater signatures are present. They are not Apple notarization or
 Windows Authenticode; state that distinction plainly to users.
@@ -35,7 +37,8 @@ Windows Authenticode; state that distinction plainly to users.
    source snapshot.
 2. Create SHA-256 manifests and Tauri updater signatures for the exact files.
 3. Create the annotated version tag and attach the installer files, signatures
-   and manifest to the GitHub Release.
+   and manifest to the GitHub Release. The release-published workflow generates
+   and uploads `latest.json` from the updater signatures.
 4. Publish English release notes and link to
    [technical documentation](docs/TECHNICAL.md),
    [hardware test report](docs/TEST_REPORT.md) and
