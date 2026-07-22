@@ -1,0 +1,62 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:516f6efc-d5c7-4d19-90d4-a4a1c72384f3",
+  "version": 1,
+  "metadata": {
+    "component": {
+      "type": "application",
+      "bom-ref": "pkg:generic/proofcat@0.3.0",
+      "name": "ProofCat",
+      "version": "0.2.4",
+      "licenses": [{ "license": { "id": "MIT" } }]
+    }
+  },
+  "components": [
+    {
+      "type": "application",
+      "bom-ref": "pkg:generic/ffmpeg@8.0.3",
+      "name": "FFmpeg",
+      "version": "8.0.3",
+      "hashes": [{ "alg": "SHA-256", "content": "3ba6b3874481bb7b058b3f4deb3ae0a31e7e5382395d331e6f68f26a3b8d6788" }],
+      "properties": [{ "name": "proofcat:artifact", "value": "macos-arm64/ffmpeg" }],
+      "licenses": [{ "expression": "LGPL-2.1-or-later" }],
+      "externalReferences": [{ "type": "website", "url": "https://ffmpeg.org/" }]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:generic/exiftool@13.55",
+      "name": "ExifTool",
+      "version": "13.55",
+      "hashes": [{ "alg": "SHA-256", "content": "cdb0b870870c69df57e37dfc190ede4f03316d54cc2a9c2ad7c9237df3736cd7" }],
+      "licenses": [{ "license": { "name": "Artistic-1.0-Perl" } }],
+      "externalReferences": [{ "type": "website", "url": "https://exiftool.org/" }]
+    },
+    {
+      "type": "application",
+      "bom-ref": "pkg:generic/mediainfo@26.05",
+      "name": "MediaInfo",
+      "version": "26.05",
+      "hashes": [{ "alg": "SHA-256", "content": "7bc94729eac4adb12b61781f62310bb437298fca3b391db83c90897243a0d8e5" }],
+      "licenses": [{ "license": { "id": "BSD-2-Clause" } }],
+      "externalReferences": [{ "type": "website", "url": "https://mediaarea.net/MediaInfo" }]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:generic/zenlib@0.4.41",
+      "name": "ZenLib",
+      "version": "0.4.41",
+      "hashes": [{ "alg": "SHA-256", "content": "41a94c40dc492136df108bca97db97efd592a26bc385429df46b662be1ccec8e" }],
+      "licenses": [{ "license": { "id": "Zlib" } }],
+      "externalReferences": [{ "type": "website", "url": "https://mediaarea.net/MediaInfo" }]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:generic/tinyxml2@mediainfo-26.05-embedded",
+      "name": "TinyXML-2",
+      "version": "MediaInfo-26.05-embedded",
+      "licenses": [{ "license": { "id": "Zlib" } }],
+      "externalReferences": [{ "type": "website", "url": "https://github.com/leethomason/tinyxml2" }]
+    }
+  ]
+}

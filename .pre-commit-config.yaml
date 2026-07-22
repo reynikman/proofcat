@@ -1,0 +1,46 @@
+# Pre-commit — ловим ошибки ДО коммита.
+# Install: pip install pre-commit && pre-commit install
+# Manual:  pre-commit run --all-files
+repos:
+  # --- Базовые проверки файлов ---
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: check-merge-conflict
+      # Не дать закоммитить большие артефакты (installers ~270 МБ, dmg и т.п.)
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+        exclude: ^src-tauri/tools/
+
+  # --- Секреты (приватный ключ подписи не должен утечь) ---
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+
+  # --- Rust (fmt + clippy) и JS (eslint) через системные тулы ---
+  - repo: local
+    hooks:
+      - id: cargo-fmt
+        name: cargo fmt
+        entry: cargo fmt --all --check
+        language: system
+        files: \.rs$
+        pass_filenames: false
+      - id: cargo-clippy
+        name: cargo clippy
+        entry: cargo clippy --workspace --all-targets -- -D warnings
+        language: system
+        files: \.rs$
+        pass_filenames: false
+      - id: eslint
+        name: eslint
+        entry: npx eslint src
+        language: system
+        files: \.js$
+        pass_filenames: false

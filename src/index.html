@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ProofCat</title>
+    <script type="module" src="/main.js" defer></script>
+  </head>
+
+  <body>
+    <div id="app">
+      <div id="topbar">
+        <div id="topbar-title">ProofCat</div>
+        <div id="mode-toggle" class="seg" title="">
+          <button type="button" data-mode="simple" data-i18n="modeSimple"></button>
+          <button type="button" data-mode="dit" data-i18n="modeDit"></button>
+        </div>
+        <button id="topbar-settings" class="settings-trigger" type="button">
+          <span class="ico">⚙</span><span data-i18n="settings"></span>
+        </button>
+      </div>
+
+      <aside id="sidebar">
+        <div id="brand">
+          <div id="brand-seal"><img src="assets/proofcat-seal.png" alt="ProofCat" /></div>
+          <div>
+            <div>ProofCat</div>
+            <div class="brand-tag"><span class="brand-dot"></span><span data-i18n="brandTag"></span></div>
+          </div>
+        </div>
+
+        <div class="sb-actions">
+          <button id="add-btn" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            <span data-i18n="addFile"></span>
+          </button>
+          <button id="offload-btn" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 20h14"/></svg>
+            <span data-i18n="offloadOpen"></span>
+          </button>
+        </div>
+
+        <div id="set-actions" class="set-actions" hidden>
+          <div class="sb-lbl" data-i18n="setTools"></div>
+          <div class="set-action-row">
+            <button id="batch-btn" type="button" hidden>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16M4 12h16M4 19h16"/><path d="M8 5v14"/></svg>
+              <span data-i18n="batchOpen"></span>
+            </button>
+            <button id="compare-btn" type="button" hidden>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="7" height="14" rx="1"/><rect x="14" y="5" width="7" height="14" rx="1"/><path d="M10 12h4"/></svg>
+              <span data-i18n="compare"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="sb-lbl">
+          <span data-i18n="filesLabel"></span>
+          <span id="file-count"></span>
+        </div>
+
+        <ul id="file-list"></ul>
+
+        <div id="sb-foot">
+          <button id="settings-btn" class="settings-trigger" type="button"><span class="ico">⚙</span><span data-i18n="settings"></span></button>
+        </div>
+      </aside>
+
+      <section id="content">
+        <div id="empty">
+          <div id="empty-seal"><img src="assets/proofcat-seal.png" alt="ProofCat" /></div>
+          <div class="empty-big" data-i18n="emptyTitle"></div>
+          <div class="empty-actions">
+            <button id="empty-offload-btn" class="empty-action" type="button">
+              <span class="empty-action-title" data-i18n="emptyOffloadTitle"></span>
+              <span class="empty-action-desc" data-i18n="emptyOffloadDesc"></span>
+            </button>
+            <button id="empty-inspect-btn" class="empty-action" type="button">
+              <span class="empty-action-title" data-i18n="emptyInspectTitle"></span>
+              <span class="empty-action-desc" data-i18n="emptyInspectDesc"></span>
+            </button>
+          </div>
+        </div>
+
+        <div id="viewer" hidden>
+          <header id="fhead">
+            <div id="fhead-info"></div>
+          </header>
+
+          <nav id="tabs">
+            <button class="tab active" data-tab="summary" data-i18n="tabSummary"></button>
+            <button class="tab" data-tab="mediainfo">MediaInfo</button>
+            <button class="tab" data-tab="exiftool">ExifTool</button>
+            <button class="tab" data-tab="ffprobe">FFprobe</button>
+            <button class="tab" data-tab="checks" data-i18n="tabChecks"></button>
+          </nav>
+
+          <div id="controls">
+            <input id="search" type="search" />
+            <span id="search-count"></span>
+            <label id="mi-mode" hidden>
+              <span data-i18n="fullView"></span>
+              <span class="switch">
+                <input type="checkbox" id="mi-full" />
+                <span class="switch-track"></span>
+              </span>
+            </label>
+          </div>
+
+          <div id="panels">
+            <div class="panel" data-panel="summary"></div>
+            <div class="panel" data-panel="checks" hidden></div>
+            <pre class="panel raw" data-panel="mediainfo" hidden></pre>
+            <pre class="panel raw" data-panel="exiftool" hidden></pre>
+            <pre class="panel raw" data-panel="ffprobe" hidden></pre>
+          </div>
+
+          <footer id="foot">
+            <button id="save-btn" type="button"></button>
+            <button id="copy-btn" type="button"></button>
+            <span id="save-status"></span>
+          </footer>
+        </div>
+
+        <div id="compare-view" hidden></div>
+        <div id="batch-view" hidden></div>
+        <div id="offload-view" hidden></div>
+      </section>
+    </div>
+
+    <div id="settings-modal" hidden>
+      <div class="modal-card">
+        <div class="modal-head">
+          <span data-i18n="settings"></span>
+          <button id="settings-close" type="button">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="set-row">
+            <span class="set-label" data-i18n="language"></span>
+            <div id="lang-toggle">
+              <button type="button" data-lang="en" class="active">EN</button>
+              <button type="button" data-lang="ru">RU</button>
+              <button type="button" data-lang="zh">中文</button>
+              <button type="button" data-lang="ja">日本語</button>
+            </div>
+          </div>
+          <div class="set-row">
+            <span class="set-label" data-i18n="themeLabel"></span>
+            <div id="theme-toggle-set" class="seg">
+              <button type="button" data-theme-set="light" data-i18n="themeLight"></button>
+              <button type="button" data-theme-set="dark" data-i18n="themeDark"></button>
+            </div>
+          </div>
+          <div class="set-row">
+            <span class="set-label" data-i18n="feedbackLabel"></span>
+            <button id="feedback-btn" class="set-btn" type="button">
+              <svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+              <span class="btn-label"></span>
+            </button>
+          </div>
+          <div class="set-row">
+            <span class="set-label" data-i18n="logsLabel"></span>
+            <button id="logs-btn" class="set-btn" type="button">
+              <svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+              <span class="btn-label"></span>
+            </button>
+          </div>
+          <div class="set-row">
+            <span class="set-label" data-i18n="updatesLabel"></span>
+            <button id="update-btn" class="set-btn" type="button">
+              <svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+              <span class="btn-label"></span>
+            </button>
+          </div>
+          <div id="update-status" class="upd-status"></div>
+          <div class="set-row">
+            <span class="set-label" data-i18n="crashLabel"></span>
+            <label class="switch">
+              <input id="crash-toggle" type="checkbox" />
+              <span class="switch-track"></span>
+            </label>
+          </div>
+          <div id="crash-hint" class="upd-status" data-i18n="crashHint"></div>
+          <div class="set-about">
+            <div><strong>ProofCat</strong> <span id="about-version" class="dim"></span></div>
+            <div id="about-path" class="dim"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="spec-modal" hidden>
+      <div class="modal-card">
+        <div class="modal-head">
+          <span data-i18n="specEditTitle"></span>
+          <button id="spec-mclose" type="button">✕</button>
+        </div>
+        <div class="modal-body">
+          <label class="spec-f"><span data-i18n="specFName"></span>
+            <input id="cs-name" type="text" maxlength="24" placeholder="My broadcaster" />
+            <small class="spec-help" data-i18n="specFNameHelp"></small>
+          </label>
+          <label class="spec-f"><span data-i18n="specFTarget"></span>
+            <input id="cs-target" type="number" step="0.1" placeholder="-23" />
+            <small class="spec-help">LUFS · <span data-i18n="specFReq"></span></small>
+          </label>
+          <label class="spec-f"><span data-i18n="specFTol"></span>
+            <input id="cs-tol" type="number" step="0.1" min="0" placeholder="1.0" />
+            <small class="spec-help">± LU · <span data-i18n="specFReq"></span></small>
+          </label>
+          <label class="spec-f"><span data-i18n="specFTp"></span>
+            <input id="cs-tp" type="number" step="0.1" placeholder="-1" />
+            <small class="spec-help" data-i18n="specFTpHelp"></small>
+          </label>
+          <label class="spec-f"><span data-i18n="specFSr"></span>
+            <span class="select-control">
+              <select id="cs-sr">
+                <option value="">—</option>
+                <option value="44100">44.1 kHz</option>
+                <option value="48000">48 kHz</option>
+                <option value="96000">96 kHz</option>
+              </select>
+            </span>
+            <small class="spec-help" data-i18n="specFSrHelp"></small>
+          </label>
+          <label class="spec-switch-row"><span class="set-label" data-i18n="specFFps"></span>
+            <span class="switch">
+              <input id="cs-fps" type="checkbox" />
+              <span class="switch-track"></span>
+            </span>
+          </label>
+          <div id="cs-err" class="err"></div>
+          <div class="set-row" style="justify-content: flex-end; gap: 8px; border-bottom: none;">
+            <button id="cs-del" class="set-btn" type="button" data-i18n="specFDelete"></button>
+            <button id="cs-save" class="loud-btn" type="button" data-i18n="specFSave"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="drop-overlay" hidden>
+      <div id="drop-seal"><img src="assets/proofcat-seal.png" alt="" /></div>
+      <span data-i18n="drop"></span>
+    </div>
+  </body>
+</html>

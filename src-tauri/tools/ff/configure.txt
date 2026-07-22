@@ -1,0 +1,16 @@
+--prefix=/meta-report/ffmpeg
+--disable-gpl
+--disable-nonfree
+--disable-doc
+--disable-debug
+--disable-static
+--enable-shared
+--disable-ffplay
+--enable-ffmpeg
+--enable-ffprobe
+--enable-videotoolbox
+--enable-audiotoolbox
+--disable-sdl2
+--disable-xlib
+--disable-libxcb
+--disable-indev=xcbgrab

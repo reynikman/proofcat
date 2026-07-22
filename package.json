@@ -1,0 +1,20 @@
+{
+  "name": "proofcat",
+  "private": true,
+  "version": "0.3.0",
+  "license": "MIT",
+  "repository": "https://github.com/reynikman/proofcat",
+  "type": "module",
+  "scripts": {
+    "tauri": "tauri",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "check": "node --check src/main.js"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9",
+    "@tauri-apps/cli": "^2",
+    "eslint": "^9",
+    "globals": "^15"
+  }
+}

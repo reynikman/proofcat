@@ -1,0 +1,75 @@
+[package]
+name = "proofcat"
+version = "0.3.0"
+description = "A Tauri App"
+authors = ["Nikolay"]
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/reynikman/proofcat"
+default-run = "proofcat"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "proofcat_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+offload-core = { path = "../crates/offload-core" }
+tauri = { version = "=2.11.4", features = [] }
+tauri-plugin-opener = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-log = "2"
+tauri-plugin-updater = "2"
+log = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+roxmltree = "0.20"
+sha2 = "0.10"
+# --- offload engine (ported from DIT-Pro, MIT — см. NOTICE) ---
+anyhow = "1"
+tokio = { version = "1", features = ["full"] }
+unicode-normalization = "0.1"
+xxhash-rust = { version = "0.8", features = ["xxh64", "xxh3"] }
+blake3 = { version = "1", features = ["rayon"] }
+md-5 = "0.10"
+quick-xml = { version = "0.41", features = ["serialize"] }
+chrono = { version = "0.4", features = ["serde"] }
+futures = "0.3"
+# checkpoint: crash-safe resume на SQLite WAL (bundled — без системных зависимостей)
+rusqlite = { version = "0.31", features = ["bundled"] }
+# crash reporting: opt-in отправка паник в свой GlitchTip (Sentry-совместимый).
+# rustls вместо native-tls — без системного OpenSSL (важно для Linux CI). См. docs/crash-reporting.md
+sentry = { version = "0.38", default-features = false, features = [
+    "backtrace",
+    "contexts",
+    "debug-images",
+    "panic",
+    "reqwest",
+    "rustls",
+] }
+
+[target.'cfg(unix)'.dependencies]
+# statvfs для проверки свободного места (offload/volume.rs)
+libc = "0.2"
+
+[target.'cfg(windows)'.dependencies]
+# GetDiskFreeSpaceExW для проверки свободного места (offload/volume.rs)
+windows = { version = "0.58", features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_Storage_FileSystem",
+    "Win32_System_IO",
+    "Win32_System_Ioctl",
+] }
+
+[dev-dependencies]
+tempfile = "3"
+# property-based фаззинг offload: рандомные деревья файлов → copy → ASC MHL verify roundtrip
+proptest = "1"

@@ -1,0 +1,35 @@
+# Gitleaks — не дать утечь секретам в репозиторий.
+# КРИТИЧНО для этого проекта: приватный ключ подписи обновлений (minisign) НИКОГДА
+# не должен попасть в git. Публичный ключ в tauri.conf.json — безопасен (в allowlist).
+title = "ProofCat gitleaks"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "minisign-private-key"
+description = "Minisign / Tauri updater private signing key"
+regex = '''untrusted comment:.*(minisign encrypted secret key|rsign encrypted secret key)'''
+tags = ["key", "tauri", "signing"]
+
+[[rules]]
+id = "tauri-signing-env"
+description = "Tauri signing private key in env"
+regex = '''TAURI_SIGNING_PRIVATE_KEY\s*=\s*['"]?dW50cnVzdGVk'''
+tags = ["key", "tauri"]
+
+[allowlist]
+description = "Публичный ключ апдейтера и примеры — не секреты"
+paths = [
+  '''src-tauri/tauri\.conf\.json''',
+  # Vendored ExifTool contains a documented HDRP algorithm constant named
+  # `$key`; it is code, not a credential.
+  '''src-tauri/tools/exiftool/lib/Image/ExifTool/Google\.pm''',
+  # German localization strings such as "Dateizugriffs" trigger the generic
+  # key-name heuristic; this file contains translations only.
+  '''src-tauri/tools/exiftool/lib/Image/ExifTool/Lang/de\.pm''',
+]
+regexes = [
+  # Публичный ключ updater (pubkey) — предназначен для распространения.
+  '''"pubkey"\s*:\s*"dW50cnVzdGVk''',
+]

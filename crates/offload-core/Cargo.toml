@@ -1,0 +1,40 @@
+[package]
+name = "offload-core"
+version = "0.3.0"
+edition = "2021"
+license = "MIT"
+description = "Tauri-independent verified media offload engine used by ProofCat"
+repository = "https://github.com/reynikman/proofcat"
+
+[dependencies]
+anyhow = "1"
+blake3 = { version = "1", features = ["rayon"] }
+chrono = { version = "0.4", features = ["serde"] }
+futures = "0.3"
+filetime = "0.2"
+log = "0.4"
+md-5 = "0.10"
+quick-xml = { version = "0.41", features = ["serialize"] }
+rusqlite = { version = "0.31", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+tokio = { version = "1", features = ["full"] }
+unicode-normalization = "0.1"
+xxhash-rust = { version = "0.8", features = ["xxh64", "xxh3"] }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.58", features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_Storage_FileSystem",
+    "Win32_System_IO",
+    "Win32_System_Ioctl",
+] }
+
+[dev-dependencies]
+proptest = "1"
+tempfile = "3"
