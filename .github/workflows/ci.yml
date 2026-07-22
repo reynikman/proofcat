@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  rust:
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Prepare generated Windows resource directory
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: New-Item -ItemType Directory -Force src-tauri/tools-windows | Out-Null
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace --all-targets
+      - name: Real process-kill and resume matrix
+        if: runner.os == 'macOS'
+        run: bash scripts/process-kill-resume.sh
+      - name: Real filesystem disk-full preflight
+        if: runner.os == 'macOS'
+        run: bash scripts/macos-disk-full.sh
+      - name: ASC MHL reference conformance
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          python3 -m venv "$RUNNER_TEMP/ascmhl-venv"
+          git clone https://github.com/ascmitc/mhl.git "$RUNNER_TEMP/ascmhl-reference"
+          git -C "$RUNNER_TEMP/ascmhl-reference" checkout \
+            0fb61f1e4c7c1c3ff422449aa6f091ce0d3b7687
+          "$RUNNER_TEMP/ascmhl-venv/bin/pip" install \
+            "$RUNNER_TEMP/ascmhl-reference"
+          fixture="$RUNNER_TEMP/proofcat-mhl"
+          mkdir -p "$fixture/source" "$fixture/destination"
+          printf 'ASC MHL conformance fixture\n' > "$fixture/source/clip.mov"
+          cargo run -q -p proofcat --bin proofcat-cli -- offload \
+            --source "$fixture/source" --dest "$fixture/destination" \
+            --profile fast --db "$fixture/offload.sqlite" >/dev/null
+          manifest=$(find "$fixture/destination/ascmhl" -name '*.mhl' -print -quit)
+          ascmhl="$RUNNER_TEMP/ascmhl-venv/bin/ascmhl-debug"
+          (
+            cd "$RUNNER_TEMP/ascmhl-reference"
+            "$ascmhl" xsd-schema-check "$manifest"
+            "$ascmhl" xsd-schema-check -df \
+              "$fixture/destination/ascmhl/ascmhl_chain.xml"
+            "$ascmhl" verify "$fixture/destination"
+          )
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run lint
+
+  bundled-tools:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/check-bundled-tools.sh
+
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rustsec/audit-check@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check licenses sources
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  sbom:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: cyclonedx-json
+          output-file: proofcat.cdx.json
+          upload-artifact: true
+      - name: Validate checked-in native SBOM
+        run: python3 -m json.tool sbom/native-tools.cdx.json >/dev/null

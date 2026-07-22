@@ -17,6 +17,18 @@ a passed physical-media test proves behaviour on the recorded devices; an instal
 checksum proves the file that was published. Record both facts without claiming
 that one automatically proves the other.
 
+## v0.3.0 publication (2026-07-22)
+
+ProofCat 0.3.0 is published at
+[`reynikman/proofcat`](https://github.com/reynikman/proofcat/releases/tag/v0.3.0).
+The release contains nine assets: macOS Apple Silicon DMG and updater archive,
+Windows x64 MSI and NSIS installers, their updater signatures, and separate
+`SHA256SUMS-macos.txt` and `SHA256SUMS-windows.txt` manifests. GitHub's
+SHA-256 digests were checked against the local release artifacts after upload.
+
+Tauri updater signatures are present. They are not Apple notarization or
+Windows Authenticode; state that distinction plainly to users.
+
 ## Publish a GitHub release
 
 1. Build the macOS Apple Silicon and Windows x64 installer sets from the intended

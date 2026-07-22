@@ -2,6 +2,8 @@
 
 This page records the evidence published with ProofCat 0.3.0. It is a statement
 of what was checked, not a claim that software can remove every storage risk.
+The public release is
+[`reynikman/proofcat v0.3.0`](https://github.com/reynikman/proofcat/releases/tag/v0.3.0).
 
 ## Published artifacts
 
@@ -10,11 +12,14 @@ The GitHub Release includes:
 - a macOS Apple Silicon DMG and updater archive;
 - Windows x64 MSI and NSIS installers;
 - Tauri updater signatures for the updater-capable artifacts; and
-- a `SHA256SUMS` manifest for each platform.
+- `SHA256SUMS-macos.txt` and `SHA256SUMS-windows.txt` manifests.
 
 Verify a release checksum before overriding an operating-system first-launch
 warning. Tauri updater signing is not Apple notarization or Windows
 Authenticode.
+
+The release contains nine assets. GitHub's SHA-256 digests were checked against
+the local artifacts after upload.
 
 ## Real-media qualification
 
@@ -47,3 +52,7 @@ Apple notarization and Windows Authenticode are not configured for v0.3.0.
 Users may see Gatekeeper or SmartScreen on first launch. That distribution
 boundary is independent of the offload verdict: only the application’s
 `SAFE_TO_FORMAT` result addresses whether source media may be reused.
+
+GitHub build attestations and a complete release SBOM are not attached to the
+v0.3.0 release page. The public source includes the native-tools SBOM and
+third-party notices; a later rebuilt release can publish attestations.

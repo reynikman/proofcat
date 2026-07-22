@@ -1,0 +1,228 @@
+name: Release readiness
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+jobs:
+  macos-ffmpeg:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build pinned LGPL-only FFmpeg
+        run: bash scripts/build-ffmpeg-lgpl-macos.sh
+      - name: Write checksums
+        run: |
+          cd src-tauri/tools/ff-lgpl
+          : > SHA256SUMS
+          found=0
+          for artifact in ./*; do
+            [[ -f "$artifact" && "$artifact" != "./SHA256SUMS" ]] || continue
+            shasum -a 256 "$artifact" >> SHA256SUMS
+            found=1
+          done
+          (( found == 1 ))
+      - uses: sigstore/cosign-installer@v3
+      - name: Sign checksum manifest
+        run: >-
+          cosign sign-blob --yes
+          --bundle src-tauri/tools/ff-lgpl/SHA256SUMS.sigstore.json
+          src-tauri/tools/ff-lgpl/SHA256SUMS
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: src-tauri/tools/ff-lgpl/*
+      - name: Upload binary and corresponding source
+        uses: actions/upload-artifact@v4
+        with:
+          name: ffmpeg-lgpl-macos
+          path: src-tauri/tools/ff-lgpl/
+          if-no-files-found: error
+
+  bundled-license-gate:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/check-bundled-tools.sh
+
+  windows-ffmpeg:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            make diffutils nasm yasm pkgconf
+            mingw-w64-ucrt-x86_64-toolchain
+      - name: Build pinned LGPL-only FFmpeg
+        run: bash scripts/build-ffmpeg-lgpl-windows.sh
+      - name: Write checksums
+        run: |
+          cd src-tauri/tools/ff-lgpl-windows
+          : > SHA256SUMS
+          found=0
+          for artifact in ./*; do
+            [[ -f "$artifact" && "$artifact" != "./SHA256SUMS" ]] || continue
+            sha256sum "$artifact" >> SHA256SUMS
+            found=1
+          done
+          (( found == 1 ))
+      - uses: sigstore/cosign-installer@v3
+      - name: Sign checksum manifest
+        shell: pwsh
+        run: >-
+          cosign sign-blob --yes
+          --bundle src-tauri/tools/ff-lgpl-windows/SHA256SUMS.sigstore.json
+          src-tauri/tools/ff-lgpl-windows/SHA256SUMS
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: src-tauri/tools/ff-lgpl-windows/*
+      - name: Upload binary and corresponding source
+        uses: actions/upload-artifact@v4
+        with:
+          name: ffmpeg-lgpl-windows
+          path: src-tauri/tools/ff-lgpl-windows/
+          if-no-files-found: error
+      - name: Assemble checksum-pinned Windows runtime tools
+        shell: pwsh
+        run: >-
+          ./scripts/assemble-windows-tools.ps1
+          -FfmpegDir src-tauri/tools/ff-lgpl-windows
+      - name: Build Windows installers
+        shell: pwsh
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          npm ci
+          npm run tauri build
+          New-Item -ItemType Directory -Force release-windows | Out-Null
+          Get-ChildItem src-tauri/target/release/bundle -File -Recurse |
+            Copy-Item -Destination release-windows
+          Get-FileHash -Algorithm SHA256 release-windows/* |
+            ForEach-Object { "$($_.Hash.ToLower())  $([IO.Path]::GetFileName($_.Path))" } |
+            Set-Content -Encoding ascii release-windows/SHA256SUMS
+      - name: Sign Windows installer checksums
+        shell: pwsh
+        run: >-
+          cosign sign-blob --yes
+          --bundle release-windows/SHA256SUMS.sigstore.json
+          release-windows/SHA256SUMS
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: release-windows/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: proofcat-windows
+          path: release-windows/
+          if-no-files-found: error
+
+  macos-app:
+    needs: [macos-ffmpeg, bundled-license-gate]
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/download-artifact@v4
+        with:
+          name: ffmpeg-lgpl-macos
+          path: .build/ffmpeg-lgpl-macos
+      - name: Use freshly reproduced LGPL runtime
+        run: |
+          rm -rf src-tauri/tools/ff
+          mkdir -p src-tauri/tools/ff
+          cp .build/ffmpeg-lgpl-macos/ffmpeg \
+            .build/ffmpeg-lgpl-macos/ffprobe \
+            .build/ffmpeg-lgpl-macos/*.dylib \
+            .build/ffmpeg-lgpl-macos/COPYING.LGPL* \
+            .build/ffmpeg-lgpl-macos/configure.txt src-tauri/tools/ff/
+          bash scripts/check-bundled-tools.sh
+      - name: Build macOS installers
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+        run: |
+          npm ci
+          npm run tauri build
+          mkdir -p release-macos
+          find src-tauri/target/release/bundle -type f \
+            \( -name '*.dmg' -o -name '*.tar.gz' -o -name '*.sig' \) \
+            -exec cp {} release-macos/ \;
+          cd release-macos
+          : > SHA256SUMS
+          found=0
+          for artifact in ./*; do
+            [[ -f "$artifact" && "$artifact" != "./SHA256SUMS" ]] || continue
+            shasum -a 256 "$artifact" >> SHA256SUMS
+            found=1
+          done
+          (( found == 1 ))
+      - uses: sigstore/cosign-installer@v3
+      - name: Sign macOS installer checksums
+        run: >-
+          cosign sign-blob --yes
+          --bundle release-macos/SHA256SUMS.sigstore.json
+          release-macos/SHA256SUMS
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: release-macos/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: proofcat-macos
+          path: release-macos/
+          if-no-files-found: error
+
+  release-metadata:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned corresponding sources
+        run: bash scripts/fetch-third-party-sources.sh
+      - uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: cyclonedx-json
+          output-file: .build/third-party-sources/proofcat.cdx.json
+          upload-artifact: false
+      - name: Add notices and checked-in native SBOM
+        run: |
+          cp THIRD_PARTY_NOTICES.md .build/third-party-sources/
+          cp sbom/native-tools.cdx.json .build/third-party-sources/
+          cd .build/third-party-sources
+          sha256sum Image-ExifTool-13.55.tar.gz \
+            MediaInfo_CLI_26.05.tar.bz2 proofcat.cdx.json \
+            native-tools.cdx.json THIRD_PARTY_NOTICES.md > SHA256SUMS
+      - uses: sigstore/cosign-installer@v3
+      - name: Sign metadata checksum manifest
+        run: >-
+          cosign sign-blob --yes
+          --bundle .build/third-party-sources/SHA256SUMS.sigstore.json
+          .build/third-party-sources/SHA256SUMS
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: .build/third-party-sources/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-metadata-and-sources
+          path: .build/third-party-sources/
+          if-no-files-found: error
