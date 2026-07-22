@@ -51,6 +51,25 @@ signatures. Its `latest.json` feed contains the matching signatures and tells
 installed applications which macOS and Windows package to download. Verify the
 checksum before overriding an operating-system warning.
 
+### Update path
+
+At startup, ProofCat checks the public feed for a newer version. If one exists,
+it shows an install offer; the operator must confirm before download and
+installation begin. Tauri validates the downloaded package against the public
+updater key embedded in the app.
+
+The feed uses the macOS `.app.tar.gz` archive and the Windows NSIS `.exe` — the
+formats the Tauri updater can install. The DMG and MSI remain the simple direct
+downloads. Their `.sig` and `SHA256SUMS` companions are retained for integrity
+verification, but they do not make the release page's updater feed larger or
+change which package the app installs.
+
+For stable releases, GitHub generates `latest.json` from the two updater
+signatures and rejects a signature associated with a different public key.
+The workflow then fetches the public feed to confirm that both platform records
+are available. See the release process in
+[`RELEASE.md`](../RELEASE.md#auto-update-delivery-contract).
+
 Tauri updater signing is not Apple Developer ID signing/notarization or Windows
 Authenticode. Therefore Gatekeeper or SmartScreen may warn on first launch.
 This is a distribution-trust boundary, not an offload verdict.

@@ -31,6 +31,23 @@ upload. The feed binds the updater packages to their signatures.
 Tauri updater signatures are present. They are not Apple notarization or
 Windows Authenticode; state that distinction plainly to users.
 
+## Auto-update delivery contract
+
+Auto-update is a release requirement, not an optional convenience feature. The
+app checks the configured feed at startup and, when a newer signed version is
+available, offers a download-and-install action. Installation always requires
+the operator's confirmation; ProofCat never silently replaces the running app.
+
+The feed contains one package per supported platform: the macOS `.app.tar.gz`
+archive and the Windows NSIS `.exe`. The DMG and MSI remain direct-install
+options. Their checksum and signature files are integrity evidence, not entries
+in `latest.json`.
+
+For every stable, non-prerelease GitHub Release, the `Publish updater manifest`
+workflow generates `latest.json` from the macOS and Windows updater signatures,
+rejects signatures made by a different key, uploads/replaces the feed and fetches
+the public endpoint to confirm both platform records are present.
+
 ## Publish a GitHub release
 
 1. Build the macOS Apple Silicon and Windows x64 installer sets from the intended
@@ -38,7 +55,9 @@ Windows Authenticode; state that distinction plainly to users.
 2. Create SHA-256 manifests and Tauri updater signatures for the exact files.
 3. Create the annotated version tag and attach the installer files, signatures
    and manifest to the GitHub Release. The release-published workflow generates
-   and uploads `latest.json` from the updater signatures.
+   and uploads `latest.json` from the updater signatures. Confirm that
+   `/releases/latest/download/latest.json` returns the new version, two package
+   URLs and two matching signatures before treating auto-update as ready.
 4. Publish English release notes and link to
    [technical documentation](docs/TECHNICAL.md),
    [hardware test report](docs/TEST_REPORT.md) and
@@ -48,3 +67,11 @@ Windows Authenticode; state that distinction plainly to users.
 
 Tauri updater signatures are distinct from Apple notarization and Windows
 Authenticode. A release must state that distinction plainly.
+
+## CI audit note
+
+`rustsec/audit-check@v2` needs permission to create GitHub check runs. Without
+it, the action can find no Rust vulnerabilities yet fail while publishing its
+result with `Resource not accessible by integration`. That is a workflow
+permission failure, not a successful security audit; correct the permission and
+rerun the check.
