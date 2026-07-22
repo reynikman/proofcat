@@ -180,7 +180,8 @@ mod tests {
 
     #[test]
     fn scrub_strips_unix_path_keeps_extension() {
-        let msg = "Cannot open source file: /Users/operator/ShootX/clientA/clip001.mov (os error 2)";
+        let msg =
+            "Cannot open source file: /Users/operator/ShootX/clientA/clip001.mov (os error 2)";
         let out = scrub_text(msg);
         assert!(!out.contains("operator"), "username leaked: {out}");
         assert!(!out.contains("clientA"), "client name leaked: {out}");
